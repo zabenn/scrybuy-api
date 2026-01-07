@@ -1,0 +1,14 @@
+[project]
+name = "scrybuy-api"
+version = "1.0.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi[standard]>=0.128.0",
+    "httpx>=0.28.1",
+    "ijson>=3.4.0.post0",
+    "ruff>=0.14.10",
+    "slowapi>=0.1.9",
+    "uvicorn>=0.40.0",
+]

@@ -1,0 +1,12 @@
+{
+    "[python]": {
+        "editor.codeActionsOnSave": [
+            "source.organizeImports"
+        ],
+        "editor.defaultFormatter": "charliermarsh.ruff"
+    },
+    "files.exclude": {
+        "__pycache__/": true,
+        ".venv/": true
+    }
+}
