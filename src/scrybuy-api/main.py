@@ -150,7 +150,7 @@ async def lifespan(
 
 
 limiter = Limiter(key_func=get_remote_address)
-app = FastAPI(title="Scrybuy API", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="ScryBuy API", version="1.0.0", lifespan=lifespan)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
