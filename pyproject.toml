@@ -1,7 +1,7 @@
 [project]
 name = "scrybuy-api"
 version = "1.0.0"
-description = "Add your description here"
+description = "ScryBuy API for vendor information"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
