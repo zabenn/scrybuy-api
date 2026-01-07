@@ -10,7 +10,7 @@ min_machines_running = 1
 processes = ["app"]
 
 [mounts]
-source = "/data"
+source = "data"
 destination = "/data"
 
 [[vm]]
