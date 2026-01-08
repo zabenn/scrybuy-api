@@ -111,7 +111,7 @@ async def load_card_kingdom_prices(path: Path) -> None:
                 prices[scryfall_id] = Price()
             entry = prices[scryfall_id].cardKingdom or VendorEntry()
             subentry = FinishEntry(
-                url=f"https://www.cardkingdom.com{item['url']}",
+                url=f"https://www.cardkingdom.com/{item['url']}",
                 price=format_price(float(item["price_retail"]), "$"),
             )
             if "etched" in item["url"]:
