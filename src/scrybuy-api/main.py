@@ -15,9 +15,9 @@ from typing_extensions import Annotated, Literal
 
 CENTS_PER_DOLLAR = 100.0
 HTTP_TIMEOUT = timedelta(seconds=30)
-MANA_POOL_MAX_AGE = timedelta(minutes=30)
-CARD_KINGDOM_MAX_AGE = timedelta(minutes=30)
-REFRESH_INTERVAL = timedelta(hours=1)
+MANA_POOL_MAX_AGE = timedelta(minutes=10)
+CARD_KINGDOM_MAX_AGE = timedelta(hours=1)
+REFRESH_INTERVAL = timedelta(minutes=1)
 
 
 class FinishEntry(BaseModel):
@@ -129,13 +129,17 @@ async def refresh_prices() -> None:
         card_kingdom_path = DATA_DIR / "card_kingdom_prices.json"
 
         downloads = []
-        if not is_path_fresh(mana_pool_path, MANA_POOL_MAX_AGE):
+        download_mana_pool = not is_path_fresh(mana_pool_path, MANA_POOL_MAX_AGE)
+        if download_mana_pool:
             downloads.append(
                 get_and_save(
                     URL("https://manapool.com/api/v1/prices/singles"), mana_pool_path
                 )
             )
-        if not is_path_fresh(card_kingdom_path, CARD_KINGDOM_MAX_AGE):
+        download_card_kingdom = not is_path_fresh(
+            card_kingdom_path, CARD_KINGDOM_MAX_AGE
+        )
+        if download_card_kingdom:
             downloads.append(
                 get_and_save(
                     URL("https://api.cardkingdom.com/api/pricelist"), card_kingdom_path
@@ -145,8 +149,10 @@ async def refresh_prices() -> None:
         if downloads:
             await asyncio.gather(*downloads)
 
-        await load_mana_pool_prices(mana_pool_path)
-        await load_card_kingdom_prices(card_kingdom_path)
+        if download_mana_pool:
+            await load_mana_pool_prices(mana_pool_path)
+        if download_card_kingdom:
+            await load_card_kingdom_prices(card_kingdom_path)
     except Exception as e:
         print(f"Error refreshing prices: {e}")
 
