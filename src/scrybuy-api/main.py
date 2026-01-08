@@ -13,6 +13,12 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from typing_extensions import Annotated, Literal
 
+CENTS_PER_DOLLAR = 100.0
+HTTP_TIMEOUT = timedelta(seconds=30)
+MANA_POOL_MAX_AGE = timedelta(minutes=30)
+CARD_KINGDOM_MAX_AGE = timedelta(minutes=30)
+REFRESH_INTERVAL = timedelta(hours=1)
+
 
 class FinishEntry(BaseModel):
     url: str
@@ -50,7 +56,7 @@ async def get_and_save(
     url: URL,
     path: Path,
 ) -> None:
-    async with AsyncClient(timeout=30) as client:
+    async with AsyncClient(timeout=HTTP_TIMEOUT.total_seconds()) as client:
         async with client.stream(
             "GET", url, headers={"User-Agent": "Scrybuy API/1.0.0"}
         ) as response:
@@ -60,12 +66,9 @@ async def get_and_save(
                     file.write(chunk)
 
 
-async def load_mana_pool_prices():
-    path = DATA_DIR / "mana_pool_prices.json"
-
-    if not is_path_fresh(path, timedelta(hours=0.5)):
-        await get_and_save(URL("https://manapool.com/api/v1/prices/singles"), path)
-
+async def load_mana_pool_prices(path: Path) -> None:
+    if not path.exists():
+        return
     with open(path, "rb") as file:
         for item in ijson.items(file, "data.item"):
             if item["scryfall_id"] is None:
@@ -77,27 +80,28 @@ async def load_mana_pool_prices():
             if item["price_cents"]:
                 entry.nonfoil = FinishEntry(
                     url=item["url"],
-                    price=format_price(item["price_cents"] / 100.0, "$"),
+                    price=format_price(item["price_cents"] / CENTS_PER_DOLLAR, "$"),
                 )
             if item["price_cents_foil"]:
                 entry.foil = FinishEntry(
                     url=f"{item['url']}?finish=foil",
-                    price=format_price(item["price_cents_foil"] / 100.0, "$"),
+                    price=format_price(
+                        item["price_cents_foil"] / CENTS_PER_DOLLAR, "$"
+                    ),
                 )
             if item["price_cents_etched"]:
                 entry.etched = FinishEntry(
                     url=f"{item['url']}?finish=foil",
-                    price=format_price(item["price_cents_etched"] / 100.0, "$"),
+                    price=format_price(
+                        item["price_cents_etched"] / CENTS_PER_DOLLAR, "$"
+                    ),
                 )
             prices[scryfall_id].manaPool = entry
 
 
-async def load_card_kingdom_prices():
-    path = DATA_DIR / "card_kingdom_prices.json"
-
-    if not is_path_fresh(path, timedelta(hours=0.5)):
-        await get_and_save(URL("https://api.cardkingdom.com/api/pricelist"), path)
-
+async def load_card_kingdom_prices(path: Path) -> None:
+    if not path.exists():
+        return
     with open(path, "rb") as file:
         for item in ijson.items(file, "data.item"):
             if item["scryfall_id"] is None:
@@ -119,17 +123,35 @@ async def load_card_kingdom_prices():
             prices[scryfall_id].cardKingdom = entry
 
 
-async def refresh_prices():
+async def refresh_prices() -> None:
     try:
-        await asyncio.gather(
-            load_mana_pool_prices(),
-            load_card_kingdom_prices(),
-        )
+        mana_pool_path = DATA_DIR / "mana_pool_prices.json"
+        card_kingdom_path = DATA_DIR / "card_kingdom_prices.json"
+
+        downloads = []
+        if not is_path_fresh(mana_pool_path, MANA_POOL_MAX_AGE):
+            downloads.append(
+                get_and_save(
+                    URL("https://manapool.com/api/v1/prices/singles"), mana_pool_path
+                )
+            )
+        if not is_path_fresh(card_kingdom_path, CARD_KINGDOM_MAX_AGE):
+            downloads.append(
+                get_and_save(
+                    URL("https://api.cardkingdom.com/api/pricelist"), card_kingdom_path
+                )
+            )
+
+        if downloads:
+            await asyncio.gather(*downloads)
+
+        await load_mana_pool_prices(mana_pool_path)
+        await load_card_kingdom_prices(card_kingdom_path)
     except Exception as e:
         print(f"Error refreshing prices: {e}")
 
 
-async def periodic_refresh(interval: timedelta):
+async def periodic_refresh(interval: timedelta) -> None:
     while True:
         await asyncio.sleep(interval.total_seconds())
         await refresh_prices()
@@ -140,7 +162,7 @@ async def lifespan(
     app: FastAPI,
 ) -> AsyncIterator[None]:
     await refresh_prices()
-    task = asyncio.create_task(periodic_refresh(timedelta(hours=1)))
+    task = asyncio.create_task(periodic_refresh(REFRESH_INTERVAL))
     yield
     task.cancel()
     try:
@@ -164,7 +186,7 @@ async def get_prices(
         Query(
             alias="id",
             title="Scryfall IDs",
-            description="List of Scryfall card IDs to retrieve price information for",
+            description="List of Scryfall card IDs to retrieve price information for.",
         ),
     ] = [],
 ) -> list[Price]:
