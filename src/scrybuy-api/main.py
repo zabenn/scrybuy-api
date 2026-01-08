@@ -14,15 +14,15 @@ from slowapi.util import get_remote_address
 from typing_extensions import Annotated, Literal
 
 
-class PriceEntry(BaseModel):
+class FinishEntry(BaseModel):
     url: str
     price: str
 
 
 class VendorEntry(BaseModel):
-    nonfoil: PriceEntry | None = None
-    foil: PriceEntry | None = None
-    etched: PriceEntry | None = None
+    nonfoil: FinishEntry | None = None
+    foil: FinishEntry | None = None
+    etched: FinishEntry | None = None
 
 
 class Price(BaseModel):
@@ -75,17 +75,17 @@ async def load_mana_pool_prices():
                 prices[scryfall_id] = Price()
             entry = prices[scryfall_id].manaPool or VendorEntry()
             if item["price_cents"]:
-                entry.nonfoil = PriceEntry(
+                entry.nonfoil = FinishEntry(
                     url=item["url"],
                     price=format_price(item["price_cents"] / 100.0, "$"),
                 )
             if item["price_cents_foil"]:
-                entry.foil = PriceEntry(
+                entry.foil = FinishEntry(
                     url=f"{item['url']}?finish=foil",
                     price=format_price(item["price_cents_foil"] / 100.0, "$"),
                 )
             if item["price_cents_etched"]:
-                entry.etched = PriceEntry(
+                entry.etched = FinishEntry(
                     url=f"{item['url']}?finish=foil",
                     price=format_price(item["price_cents_etched"] / 100.0, "$"),
                 )
@@ -106,7 +106,7 @@ async def load_card_kingdom_prices():
             if scryfall_id not in prices:
                 prices[scryfall_id] = Price()
             entry = prices[scryfall_id].cardKingdom or VendorEntry()
-            subentry = PriceEntry(
+            subentry = FinishEntry(
                 url=f"https://www.cardkingdom.com{item['url']}",
                 price=format_price(float(item["price_retail"]), "$"),
             )
