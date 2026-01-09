@@ -129,17 +129,13 @@ async def refresh_prices() -> None:
         card_kingdom_path = DATA_DIR / "card_kingdom_prices.json"
 
         downloads = []
-        download_mana_pool = not is_path_fresh(mana_pool_path, MANA_POOL_MAX_AGE)
-        if download_mana_pool:
+        if not is_path_fresh(mana_pool_path, MANA_POOL_MAX_AGE):
             downloads.append(
                 get_and_save(
                     URL("https://manapool.com/api/v1/prices/singles"), mana_pool_path
                 )
             )
-        download_card_kingdom = not is_path_fresh(
-            card_kingdom_path, CARD_KINGDOM_MAX_AGE
-        )
-        if download_card_kingdom:
+        if not is_path_fresh(card_kingdom_path, CARD_KINGDOM_MAX_AGE):
             downloads.append(
                 get_and_save(
                     URL("https://api.cardkingdom.com/api/pricelist"), card_kingdom_path
@@ -149,10 +145,8 @@ async def refresh_prices() -> None:
         if downloads:
             await asyncio.gather(*downloads)
 
-        if download_mana_pool:
-            await load_mana_pool_prices(mana_pool_path)
-        if download_card_kingdom:
-            await load_card_kingdom_prices(card_kingdom_path)
+        await load_mana_pool_prices(mana_pool_path)
+        await load_card_kingdom_prices(card_kingdom_path)
     except Exception as e:
         print(f"Error refreshing prices: {e}")
 
@@ -171,10 +165,6 @@ async def lifespan(
     task = asyncio.create_task(periodic_refresh(REFRESH_INTERVAL))
     yield
     task.cancel()
-    try:
-        await task
-    except asyncio.CancelledError:
-        pass
 
 
 limiter = Limiter(key_func=get_remote_address)
