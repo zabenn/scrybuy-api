@@ -16,5 +16,5 @@ destination = "/data"
 [[vm]]
 cpu_kind = "shared"
 cpus = 1
-memory = "512mb"
-memory_mb = 512
+memory = "1gb"
+memory_mb = 1_024

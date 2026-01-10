@@ -1,4 +1,5 @@
 import asyncio
+import traceback
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
@@ -147,8 +148,9 @@ async def refresh_prices() -> None:
 
         await load_mana_pool_prices(mana_pool_path)
         await load_card_kingdom_prices(card_kingdom_path)
-    except Exception as e:
-        print(f"Error refreshing prices: {e}")
+    except Exception:
+        print("Error refreshing prices:")
+        print(traceback.format_exc())
 
 
 async def periodic_refresh(interval: timedelta) -> None:
