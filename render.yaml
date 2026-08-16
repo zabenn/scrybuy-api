@@ -1,0 +1,40 @@
+databases:
+  - name: scrybuy-api-db
+    plan: free
+    region: oregon
+services:
+  - name: scrybuy-api
+    type: web
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /docs
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: scrybuy-api-db
+          property: connectionString
+  - name: scrybuy-api-fetch-card-kingdom-prices
+    type: cron
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    schedule: "0 15-23,0-3 * * *"
+    dockerCommand: /app/.venv/bin/fetch-card-kingdom-prices
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: scrybuy-api-db
+          property: connectionString
+  - name: scrybuy-api-fetch-mana-pool-prices
+    type: cron
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    schedule: "0 15-23,0-3 * * *"
+    dockerCommand: /app/.venv/bin/fetch-mana-pool-prices
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: scrybuy-api-db
+          property: connectionString

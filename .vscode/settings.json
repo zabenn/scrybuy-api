@@ -6,7 +6,7 @@
         "editor.defaultFormatter": "charliermarsh.ruff"
     },
     "files.exclude": {
-        "__pycache__/": true,
-        ".venv/": true
+        "**/__pycache__/": true,
+        "**/.venv/": true
     }
 }

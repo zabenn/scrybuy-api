@@ -1,13 +1,8 @@
-FROM python:3.13 AS builder
-
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
-WORKDIR /app
-RUN python -m venv .venv
-COPY pyproject.toml ./
-RUN .venv/bin/pip install .
 FROM python:3.13-slim
+
+RUN pip install --no-cache-dir uv
 WORKDIR /app
-COPY --from=builder /app/.venv .venv/
 COPY . .
-CMD ["/app/.venv/bin/uvicorn", "src.scrybuy-api.main:app", "--host", "0.0.0.0", "--port", "8080"]
+RUN uv sync --locked --no-dev
+EXPOSE 10000
+CMD ["sh", "-c", "uv run -- uvicorn --host 0.0.0.0 --port ${PORT:-10000} scrybuy_api.main:app"]
