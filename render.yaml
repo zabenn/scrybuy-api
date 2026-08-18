@@ -1,40 +1,72 @@
 databases:
   - name: scrybuy-api-db
-    plan: free
+    databaseName: scrybuy
+    user: scrybuy
+    plan: basic-256mb
     region: oregon
+    postgresMajorVersion: "18"
+    diskSizeGB: 1
 services:
   - name: scrybuy-api
     type: web
     runtime: docker
-    dockerfilePath: ./Dockerfile
-    dockerContext: .
-    healthCheckPath: /docs
+    repo: https://github.com/zabenn/scrybuy-api
+    plan: starter
     envVars:
       - key: DATABASE_URL
         fromDatabase:
           name: scrybuy-api-db
           property: connectionString
+    region: oregon
+    healthCheckPath: /docs
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
+    autoDeployTrigger: commit
   - name: scrybuy-api-fetch-card-kingdom-prices
     type: cron
     runtime: docker
-    dockerfilePath: ./Dockerfile
-    dockerContext: .
-    schedule: "0 15-23,0-3 * * *"
-    dockerCommand: /app/.venv/bin/fetch-card-kingdom-prices
+    repo: https://github.com/zabenn/scrybuy-api
+    plan: standard
     envVars:
       - key: DATABASE_URL
         fromDatabase:
           name: scrybuy-api-db
           property: connectionString
+    region: oregon
+    schedule: "0 15-23,0-3 * * *"
+    dockerCommand: /app/.venv/bin/fetch-card-kingdom-prices
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
+    autoDeployTrigger: commit
   - name: scrybuy-api-fetch-mana-pool-prices
     type: cron
     runtime: docker
-    dockerfilePath: ./Dockerfile
-    dockerContext: .
-    schedule: "0 15-23,0-3 * * *"
-    dockerCommand: /app/.venv/bin/fetch-mana-pool-prices
+    repo: https://github.com/zabenn/scrybuy-api
+    plan: standard
     envVars:
       - key: DATABASE_URL
         fromDatabase:
           name: scrybuy-api-db
           property: connectionString
+    region: oregon
+    schedule: "0 15-23,0-3 * * *"
+    dockerCommand: /app/.venv/bin/fetch-mana-pool-prices
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
+    autoDeployTrigger: commit
+  - name: scrybuy-api-fetch-scryfall-cards
+    type: cron
+    runtime: docker
+    repo: https://github.com/zabenn/scrybuy-api
+    plan: standard
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: scrybuy-api-db
+          property: connectionString
+    region: oregon
+    schedule: 0 0 * * 5
+    dockerCommand: /app/.venv/bin/fetch-scryfall-cards
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
+    autoDeployTrigger: commit

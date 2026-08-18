@@ -1,12 +1,13 @@
 {
-    "[python]": {
-        "editor.codeActionsOnSave": [
-            "source.organizeImports"
-        ],
-        "editor.defaultFormatter": "charliermarsh.ruff"
-    },
-    "files.exclude": {
-        "**/__pycache__/": true,
-        "**/.venv/": true
-    }
+  "[python]": {
+    "editor.codeActionsOnSave": ["source.organizeImports"],
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "files.exclude": {
+    "**/__pycache__/": true,
+    "**/.venv/": true
+  },
+  "terminal.integrated.env.linux": {
+    "DATABASE_URL": "postgresql://scrybuy:scrybuy@localhost:5432/scrybuy"
+  }
 }

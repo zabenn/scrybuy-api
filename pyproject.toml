@@ -17,6 +17,7 @@ dependencies = [
 [project.scripts]
 fetch-card-kingdom-prices = "scrybuy_api.main:fetch_card_kingdom_prices"
 fetch-mana-pool-prices = "scrybuy_api.main:fetch_mana_pool_prices"
+fetch-scryfall-cards = "scrybuy_api.main:fetch_scryfall_cards"
 
 [build-system]
 requires = ["hatchling"]
